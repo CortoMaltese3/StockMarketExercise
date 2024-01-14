@@ -10,6 +10,11 @@ a. For a given stock,
 b. Calculate the GBCE All Share Index using the geometric mean of prices for all stocks
 """
 
+
+from datetime import datetime, timedelta
+import math
+
+
 # Sample data from the Global Beverage Corporation Exchange
 stocks = {
     "TEA": {
@@ -43,6 +48,8 @@ stocks = {
         "Par Value": 250,
     },
 }
+
+trades = []
 
 
 # Requirement 1a.i
@@ -92,6 +99,44 @@ def calculate_pe_ratio(stock_symbol, price):
     return price / stock["Last Dividend"]
 
 
+# Requirement 1a.iii
+def record_trade(stock_symbol, share_quantity, buy_sell_indicator, traded_price):
+    """
+    Record a trade, with timestamp, quantity of shares, buy or sell indicator and
+    traded price.
+    """
+    trades.append(
+        {
+            "id": len(trades) + 1,
+            "stock_symbol": stock_symbol,
+            "transaction_created": datetime.utcnow(),
+            "share_quantity": share_quantity,
+            "buy_sell_indicator": buy_sell_indicator,  # 0 for 'buy' or 1 for 'sell'
+            "traded_price": traded_price,
+        }
+    )
+
+
+# Requirement 1a.iv
+def calculate_volume_weighted_stock_price(stock_symbol):
+    """
+    Calculate Volume Weighted Stock Price based on trades in past 15 minutes.
+    """
+    recent_trades = [
+        trade
+        for trade in trades
+        if trade["stock_symbol"] == stock_symbol
+        and datetime.utcnow() - trade["transaction_created"] <= timedelta(minutes=15)
+    ]
+    total_traded_price_quantity = sum(
+        trade["traded_price"] * trade["share_quantity"] for trade in recent_trades
+    )
+    total_quantity = sum(trade["share_quantity"] for trade in recent_trades)
+    if total_quantity == 0:
+        return None
+    return total_traded_price_quantity / total_quantity
+
+
 def main():
     # Divident yield
     print(calculate_dividend_yield("TEA", 100))
@@ -99,9 +144,15 @@ def main():
     print(calculate_dividend_yield("GIN", 100))
 
     # P/E ratio
-    print(calculate_pe_ratio("TEA", 100))
+    # print(calculate_pe_ratio("TEA", 100))
     print(calculate_pe_ratio("ALE", 100))
     print(calculate_pe_ratio("GIN", 100))
+
+    record_trade("GEO", 200, 0, 500)
+    record_trade("GEO", 100, 1, 300)
+    print(trades)
+
+    print(calculate_volume_weighted_stock_price("GEO"))
 
 
 if __name__ == "__main__":
