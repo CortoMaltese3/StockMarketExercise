@@ -102,16 +102,30 @@ def calculate_pe_ratio(stock_symbol, price):
 # Requirement 1a.iii
 def record_trade(stock_symbol, share_quantity, buy_sell_indicator, traded_price):
     """
-    Record a trade, with timestamp, quantity of shares, buy or sell indicator and
+    Record a trade, with timestamp, quantity of shares, buy or sell indicator, and
     traded price.
     """
+    if stock_symbol not in stocks:
+        raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
+
+    if not isinstance(share_quantity, int) or share_quantity <= 0:
+        raise ValueError("Share quantity must be a positive integer.")
+
+    if buy_sell_indicator not in [0, 1]:
+        raise ValueError(
+            "Buy/sell indicator must be either 0 for 'buy' or 1 for 'sell'."
+        )
+
+    if not isinstance(traded_price, (int, float)) or traded_price <= 0:
+        raise ValueError("Traded price must be a positive number.")
+
     trades.append(
         {
             "id": len(trades) + 1,
             "stock_symbol": stock_symbol,
             "transaction_created": datetime.utcnow(),
             "share_quantity": share_quantity,
-            "buy_sell_indicator": buy_sell_indicator,  # 0 for 'buy' or 1 for 'sell'
+            "buy_sell_indicator": buy_sell_indicator,
             "traded_price": traded_price,
         }
     )
@@ -122,18 +136,24 @@ def calculate_volume_weighted_stock_price(stock_symbol):
     """
     Calculate Volume Weighted Stock Price based on trades in past 15 minutes.
     """
+    if stock_symbol not in stocks:
+        raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
+
     recent_trades = [
         trade
         for trade in trades
         if trade["stock_symbol"] == stock_symbol
         and datetime.utcnow() - trade["transaction_created"] <= timedelta(minutes=15)
     ]
+
+    total_quantity = sum(trade["share_quantity"] for trade in recent_trades)
+    if total_quantity == 0:
+        raise ValueError("No trades in the last 15 minutes for the given stock symbol.")
+
     total_traded_price_quantity = sum(
         trade["traded_price"] * trade["share_quantity"] for trade in recent_trades
     )
-    total_quantity = sum(trade["share_quantity"] for trade in recent_trades)
-    if total_quantity == 0:
-        return None
+
     return total_traded_price_quantity / total_quantity
 
 
@@ -148,11 +168,11 @@ def main():
     print(calculate_pe_ratio("ALE", 100))
     print(calculate_pe_ratio("GIN", 100))
 
-    record_trade("GEO", 200, 0, 500)
-    record_trade("GEO", 100, 1, 300)
+    record_trade("ALE", 200, 0, 500)
+    record_trade("ALE", 100, 1, 300)
     print(trades)
 
-    print(calculate_volume_weighted_stock_price("GEO"))
+    print(calculate_volume_weighted_stock_price("ALE"))
 
 
 if __name__ == "__main__":
