@@ -50,8 +50,20 @@ def calculate_dividend_yield(stock_symbol, price):
     """
     Calculate the dividend yield for a given stock and price.
     """
-    stock = stocks[stock_symbol]
+    try:
+        stock = stocks[stock_symbol]
+    except KeyError:
+        raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
+
+    if not isinstance(price, (int, float)):
+        raise TypeError("Price must be a number.")
+
+    if price <= 0:
+        raise ValueError("Price must be greater than zero.")
+
     if stock["Type"] == "Common":
+        if stock["Last Dividend"] == 0:
+            return 0
         return stock["Last Dividend"] / price
     else:  # Preferred stock
         fixed_dividend = float(stock["Fixed Dividend"].strip("%")) / 100
@@ -63,12 +75,21 @@ def calculate_pe_ratio(stock_symbol, price):
     """
     Calculate the P/E ratio for a given stock and price.
     """
-    stock = stocks[stock_symbol]
+    try:
+        stock = stocks[stock_symbol]
+    except KeyError:
+        raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
+
+    if not isinstance(price, (int, float)):
+        raise TypeError("Price must be a number.")
+
+    if price <= 0:
+        raise ValueError("Price must be greater than zero.")
+
     if stock["Last Dividend"] == 0:
-        return None
-    else:
-        pe_ratio = price / stock["Last Dividend"]
-        return pe_ratio
+        raise ValueError("P/E ratio cannot be calculated. Error division by zero.")
+
+    return price / stock["Last Dividend"]
 
 
 def main():
