@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 
 from adapter import DataAdapter
+
+
 class StockMarket:
     def __init__(self) -> None:
         self.data_adapter = DataAdapter()
@@ -10,9 +12,15 @@ class StockMarket:
         self.trades = []
 
     # Requirement 1a.i
-    def calculate_dividend_yield(self, stock_symbol, price):
+    def calculate_dividend_yield(self, stock_symbol: str, price: float) -> float:
         """
         Calculate the dividend yield for a given stock and price.
+
+        :param stock_symbol: Symbol of the stock (e.g., 'TEA').
+        :param price: The market price of the stock.
+        :return: The dividend yield as a float.
+        :raises ValueError: If the stock symbol is not found or the price is non-positive.
+        :raises TypeError: If the price is not a number.
         """
         try:
             stock = self.stocks[stock_symbol]
@@ -34,9 +42,16 @@ class StockMarket:
             return fixed_dividend * stock["Par Value"] / price
 
     # Requirement 1a.ii
-    def calculate_pe_ratio(self, stock_symbol, price):
+    def calculate_pe_ratio(self, stock_symbol: str, price: float) -> float:
         """
-        Calculate the P/E ratio for a given stock and price.
+        Calculate the Price/Earnings (P/E) ratio for a given stock and price.
+
+        :param stock_symbol: Symbol of the stock (e.g., 'ALE').
+        :param price: The market price of the stock.
+        :return: The P/E ratio as a float.
+        :raises ValueError: If the stock symbol is not found, the price is non-positive,
+                            or the last dividend is zero.
+        :raises TypeError: If the price is not a number.
         """
         try:
             stock = self.stocks[stock_symbol]
@@ -55,10 +70,19 @@ class StockMarket:
         return price / stock["Last Dividend"]
 
     # Requirement 1a.iii
-    def record_trade(self, stock_symbol, share_quantity, buy_sell_indicator, traded_price):
+    def record_trade(
+        self, stock_symbol: str, share_quantity: int, buy_sell_indicator: int, traded_price: float
+    ):
         """
-        Record a trade, with timestamp, quantity of shares, buy or sell indicator, and
-        traded price.
+        Record a trade with details such as stock symbol, quantity of shares, buy/sell indicator, and traded price.
+
+        :param stock_symbol: Symbol of the stock (e.g., 'GIN').
+        :param share_quantity: The number of shares traded.
+        :param buy_sell_indicator: Indicator of the trade type (0 for 'buy', 1 for 'sell').
+        :param traded_price: The price at which the stock was traded.
+        :raises ValueError: If the stock symbol is not found, share quantity is non-positive,
+                            buy/sell indicator is not 0 or 1, or traded price is non-positive.
+        :raises TypeError: If the share quantity or traded price is not a number.
         """
         if stock_symbol not in self.stocks:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
@@ -84,9 +108,13 @@ class StockMarket:
         )
 
     # Requirement 1a.iv
-    def calculate_volume_weighted_stock_price(self, stock_symbol):
+    def calculate_volume_weighted_stock_price(self, stock_symbol: str) -> float:
         """
-        Calculate Volume Weighted Stock Price based on trades in past 15 minutes.
+        Calculate the Volume Weighted Stock Price (VWSP) based on trades in the past 15 minutes for a given stock.
+
+        :param stock_symbol: Symbol of the stock (e.g., 'JOE').
+        :return: The VWSP as a float.
+        :raises ValueError: If the stock symbol is not found or there are no trades in the last 15 minutes.
         """
         if stock_symbol not in self.stocks:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")

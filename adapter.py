@@ -1,5 +1,5 @@
 class DataAdapter:
-    def __init__(self):
+    def __init__(self) -> None:
         # Sample data from the Global Beverage Corporation Exchange
         self._stocks = {
             "TEA": {
@@ -34,6 +34,5 @@ class DataAdapter:
             },
         }
 
-
-    def get_stocks(self):
+    def get_stocks(self) -> dict:
         return self._stocks
