@@ -1,0 +1,9 @@
+name: jpm
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - pandas
+  - pip
+  - pytest
