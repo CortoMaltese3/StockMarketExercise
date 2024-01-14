@@ -31,6 +31,8 @@ def main():
 
     print(market.calculate_volume_weighted_stock_price("ALE"))
 
+    print(market.calculate_gbce_all_share_index())
+
 
 if __name__ == "__main__":
     main()

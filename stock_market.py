@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from math import prod
 
 from adapter import DataAdapter
 
@@ -135,3 +136,24 @@ class StockMarket:
         )
 
         return total_traded_price_quantity / total_quantity
+
+    # Requirement 1b
+    def calculate_gbce_all_share_index(self) -> float:
+        """
+        Calculate the GBCE All Share Index using the geometric mean of traded prices for all stocks in the last 15 minutes.
+
+        :return: The GBCE All Share Index as a float.
+        :raises ValueError: If there are no trades in the last 15 minutes.
+        """
+        prices = [
+            trade["traded_price"]
+            for trade in self.trades
+            if datetime.utcnow() - trade["transaction_created"] <= timedelta(minutes=15)
+        ]
+        if not prices:
+            raise ValueError(
+                "No trades in the last 15 minutes to calculate the GBCE All Share Index."
+            )
+
+        product_of_prices = prod(prices)
+        return product_of_prices ** (1 / len(prices))

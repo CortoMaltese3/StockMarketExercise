@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 import pytest
+
 from stock_market import StockMarket
 
 
@@ -48,3 +50,18 @@ def test_dividend_yield_error_invalid_stock(market):
 def test_pe_ratio_error_division_by_zero(market):
     with pytest.raises(ValueError):
         market.calculate_pe_ratio("TEA", 100)
+
+
+def test_calculate_gbce_all_share_index(market):
+    # Record some trades at the current time
+    market.record_trade("POP", 100, 0, 500)
+    market.record_trade("ALE", 200, 1, 300)
+
+    # Ensure that the GBCE All Share Index can be calculated
+    assert market.calculate_gbce_all_share_index() > 0
+
+
+def test_calculate_gbce_all_share_index_no_recent_trades(market):
+    # Assuming there are no trades in the last 15 minutes initially
+    with pytest.raises(ValueError):
+        market.calculate_gbce_all_share_index()
