@@ -15,15 +15,13 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Miniconda
-      uses: conda-incubator/setup-miniconda@v3
+      uses: conda-incubator/setup-miniconda@v4
       with:
         auto-update-conda: true
-
-    - name: Create conda environment
-      run: conda env create --file environment.yml
-
-    - name: Activate conda environment
-      run: conda activate jpm
-
-    - name: Run tests
-      run: pytest tests
+  
+    - name: Install dependencies and run tests
+      run: |
+        conda env create --file environment.yml
+        conda activate jpm
+        pytest tests
+  
