@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import pandas as pd
 
-from adapter import DataAdapter
+from .adapter import DataAdapter
 
 
 class StockMarket:

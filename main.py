@@ -10,7 +10,7 @@ a. For a given stock,
 b. Calculate the GBCE All Share Index using the geometric mean of prices for all stocks
 """
 
-from stock_market import StockMarket
+from src.stock_market import StockMarket
 
 
 def main():

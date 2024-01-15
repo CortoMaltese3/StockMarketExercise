@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - black
+  - pandas
   - python
   - pip
   - pytest
