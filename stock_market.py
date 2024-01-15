@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from math import prod
 
 import pandas as pd
 
@@ -8,8 +7,10 @@ from adapter import DataAdapter
 
 class StockMarket:
     def __init__(self) -> None:
+        # Initialize the data adapter to fetch stock data
         self.data_adapter = DataAdapter()
         self._stocks = self.data_adapter.get_stocks()
+        # Convert the stock data into a Pandas DataFrame for easier manipulation
         self.stocks_df = self._convert_stocks_to_dataframe()
 
         # Trade log
@@ -34,6 +35,7 @@ class StockMarket:
         :raises ValueError: If the stock symbol is not found or the price is non-positive.
         :raises TypeError: If the price is not a number.
         """
+        # Invalid input error handling
         if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
@@ -43,7 +45,10 @@ class StockMarket:
         if price <= 0:
             raise ValueError("Price must be greater than zero.")
 
+        # Retrieve single stock information from the dataset
         stock = self.stocks_df.loc[stock_symbol]
+
+        # Calculate dividend yield based on stock type
         if stock["Type"] == "Common":
             if stock["Last Dividend"] == 0:
                 return 0
@@ -64,6 +69,7 @@ class StockMarket:
                             or the last dividend is zero.
         :raises TypeError: If the price is not a number.
         """
+        # Invalid input error handling
         if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
@@ -73,6 +79,7 @@ class StockMarket:
         if price <= 0:
             raise ValueError("Price must be greater than zero.")
 
+        # Retrieve single stock information from the dataset
         stock = self.stocks_df.loc[stock_symbol]
         if stock["Last Dividend"] == 0:
             raise ValueError("P/E ratio cannot be calculated. Error division by zero.")
@@ -94,6 +101,7 @@ class StockMarket:
                             buy/sell indicator is not 0 or 1, or traded price is non-positive.
         :raises TypeError: If the share quantity or traded price is not a number.
         """
+        # Invalid input error handling
         if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
@@ -106,6 +114,7 @@ class StockMarket:
         if not isinstance(traded_price, (int, float)) or traded_price <= 0:
             raise ValueError("Traded price must be a positive number.")
 
+        # Record the trade
         self.trades.append(
             {
                 "id": len(self.trades) + 1,
@@ -126,21 +135,26 @@ class StockMarket:
         :return: The VWSP as a float.
         :raises ValueError: If the stock symbol is not found or there are no trades in the last 15 minutes.
         """
+        # Invalid input error handling
         if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
+        # Retrieve recent trades for the given stock
         trades_df = pd.DataFrame(self.trades)
         recent_trades = trades_df[
             (trades_df["stock_symbol"] == stock_symbol)
             & (datetime.utcnow() - trades_df["transaction_created"] <= timedelta(minutes=15))
         ]
 
+        # Raise error in case of no trades in the last 15 minutes
         if recent_trades.empty:
             raise ValueError("No trades in the last 15 minutes for the given stock symbol.")
 
+        # Calculate the VWSP
         volume_weighted_stock_price = (
             recent_trades["traded_price"] * recent_trades["share_quantity"]
         ).sum() / recent_trades["share_quantity"].sum()
+
         return volume_weighted_stock_price
 
     # Requirement 1b
@@ -151,15 +165,19 @@ class StockMarket:
         :return: The GBCE All Share Index as a float.
         :raises ValueError: If there are no trades in the last 15 minutes.
         """
+        # Retrieve recent trades
         trades_df = pd.DataFrame(self.trades)
         recent_prices = trades_df[
             datetime.utcnow() - trades_df["transaction_created"] <= timedelta(minutes=15)
         ]["traded_price"]
 
+        # Raise error in case of no trades in the last 15 minutes
         if recent_prices.empty:
             raise ValueError(
                 "No trades in the last 15 minutes to calculate the GBCE All Share Index."
             )
 
+        # Calculate the GBCE All Share Index
         product_of_prices = recent_prices.prod()
+
         return product_of_prices ** (1 / len(recent_prices))
