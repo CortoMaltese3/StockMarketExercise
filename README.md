@@ -7,6 +7,7 @@ Assignment to create a Super Simple Stock Market Python application
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+- [Usage](#usage)
 - [Running Tests](#running-tests)
 
 ## Getting Started
@@ -28,6 +29,10 @@ Step-by-step instructions on how to install and set up the project.
 2. Change to the project directory: `cd StockMarketExercise`
 3. Create a conda environment to work with: `conda env create -f environment.yml`
 4. Activate the environment: `conda activate jpm`
+
+## Usage
+1. Change to the project directory: `cd StockMarketExercise`
+2. Execute the main script: `python main.py`
 
 ## Running Tests
 
