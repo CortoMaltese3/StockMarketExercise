@@ -14,7 +14,17 @@ class StockMarket:
         self.stocks_df = self._convert_stocks_to_dataframe()
 
         # Trade log
-        self.trades = []
+        # Initialize the trades DataFrame with predefined columns to avoid issues with empty DataFrames
+        self.trades = pd.DataFrame(
+            columns=[
+                "id",
+                "stock_symbol",
+                "transaction_created",
+                "share_quantity",
+                "buy_sell_indicator",
+                "traded_price",
+            ]
+        )
 
     def _convert_stocks_to_dataframe(self) -> pd.DataFrame:
         """
@@ -115,16 +125,21 @@ class StockMarket:
             raise ValueError("Traded price must be a positive number.")
 
         # Record the trade
-        self.trades.append(
-            {
-                "id": len(self.trades) + 1,
-                "stock_symbol": stock_symbol,
-                "transaction_created": datetime.utcnow(),
-                "share_quantity": share_quantity,
-                "buy_sell_indicator": buy_sell_indicator,
-                "traded_price": traded_price,
-            }
+        new_trade = pd.DataFrame(
+            [
+                {
+                    "id": len(self.trades) + 1,
+                    "stock_symbol": stock_symbol,
+                    "transaction_created": datetime.utcnow(),
+                    "share_quantity": share_quantity,
+                    "buy_sell_indicator": buy_sell_indicator,
+                    "traded_price": traded_price,
+                }
+            ]
         )
+
+        # Concatenate the new trade to the existing trades DataFrame
+        self.trades = pd.concat([self.trades, new_trade], ignore_index=True)
 
     # Requirement 1a.iv
     def calculate_volume_weighted_stock_price(self, stock_symbol: str) -> float:

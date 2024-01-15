@@ -30,7 +30,7 @@ def test_calculate_pe_ratio(market):
 def test_record_trade(market):
     market.record_trade("POP", 100, 0, 500)
     assert len(market.trades) == 1
-    assert market.trades[0]["stock_symbol"] == "POP"
+    assert market.trades.iloc[0]["stock_symbol"] == "POP"
 
 
 def test_calculate_volume_weighted_stock_price(market):
