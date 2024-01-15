@@ -1,16 +1,27 @@
 from datetime import datetime, timedelta
 from math import prod
 
+import pandas as pd
+
 from adapter import DataAdapter
 
 
 class StockMarket:
     def __init__(self) -> None:
         self.data_adapter = DataAdapter()
-        self.stocks = self.data_adapter.get_stocks()
+        self._stocks = self.data_adapter.get_stocks()
+        self.stocks_df = self._convert_stocks_to_dataframe()
 
         # Trade log
         self.trades = []
+
+    def _convert_stocks_to_dataframe(self) -> pd.DataFrame:
+        """
+        Convert the stocks dictionary to a DataFrame.
+
+        :return: The stocks DataFrame.
+        """
+        return pd.DataFrame.from_dict(self._stocks, orient="index")
 
     # Requirement 1a.i
     def calculate_dividend_yield(self, stock_symbol: str, price: float) -> float:
@@ -23,9 +34,7 @@ class StockMarket:
         :raises ValueError: If the stock symbol is not found or the price is non-positive.
         :raises TypeError: If the price is not a number.
         """
-        try:
-            stock = self.stocks[stock_symbol]
-        except KeyError:
+        if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
         if not isinstance(price, (int, float)):
@@ -34,6 +43,7 @@ class StockMarket:
         if price <= 0:
             raise ValueError("Price must be greater than zero.")
 
+        stock = self.stocks_df.loc[stock_symbol]
         if stock["Type"] == "Common":
             if stock["Last Dividend"] == 0:
                 return 0
@@ -54,9 +64,7 @@ class StockMarket:
                             or the last dividend is zero.
         :raises TypeError: If the price is not a number.
         """
-        try:
-            stock = self.stocks[stock_symbol]
-        except KeyError:
+        if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
         if not isinstance(price, (int, float)):
@@ -65,6 +73,7 @@ class StockMarket:
         if price <= 0:
             raise ValueError("Price must be greater than zero.")
 
+        stock = self.stocks_df.loc[stock_symbol]
         if stock["Last Dividend"] == 0:
             raise ValueError("P/E ratio cannot be calculated. Error division by zero.")
 
@@ -85,7 +94,7 @@ class StockMarket:
                             buy/sell indicator is not 0 or 1, or traded price is non-positive.
         :raises TypeError: If the share quantity or traded price is not a number.
         """
-        if stock_symbol not in self.stocks:
+        if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
         if not isinstance(share_quantity, int) or share_quantity <= 0:
@@ -117,25 +126,22 @@ class StockMarket:
         :return: The VWSP as a float.
         :raises ValueError: If the stock symbol is not found or there are no trades in the last 15 minutes.
         """
-        if stock_symbol not in self.stocks:
+        if stock_symbol not in self.stocks_df.index:
             raise ValueError(f"Stock symbol '{stock_symbol}' not found.")
 
-        recent_trades = [
-            trade
-            for trade in self.trades
-            if trade["stock_symbol"] == stock_symbol
-            and datetime.utcnow() - trade["transaction_created"] <= timedelta(minutes=15)
+        trades_df = pd.DataFrame(self.trades)
+        recent_trades = trades_df[
+            (trades_df["stock_symbol"] == stock_symbol)
+            & (datetime.utcnow() - trades_df["transaction_created"] <= timedelta(minutes=15))
         ]
 
-        total_quantity = sum(trade["share_quantity"] for trade in recent_trades)
-        if total_quantity == 0:
+        if recent_trades.empty:
             raise ValueError("No trades in the last 15 minutes for the given stock symbol.")
 
-        total_traded_price_quantity = sum(
-            trade["traded_price"] * trade["share_quantity"] for trade in recent_trades
-        )
-
-        return total_traded_price_quantity / total_quantity
+        volume_weighted_stock_price = (
+            recent_trades["traded_price"] * recent_trades["share_quantity"]
+        ).sum() / recent_trades["share_quantity"].sum()
+        return volume_weighted_stock_price
 
     # Requirement 1b
     def calculate_gbce_all_share_index(self) -> float:
@@ -145,15 +151,15 @@ class StockMarket:
         :return: The GBCE All Share Index as a float.
         :raises ValueError: If there are no trades in the last 15 minutes.
         """
-        prices = [
-            trade["traded_price"]
-            for trade in self.trades
-            if datetime.utcnow() - trade["transaction_created"] <= timedelta(minutes=15)
-        ]
-        if not prices:
+        trades_df = pd.DataFrame(self.trades)
+        recent_prices = trades_df[
+            datetime.utcnow() - trades_df["transaction_created"] <= timedelta(minutes=15)
+        ]["traded_price"]
+
+        if recent_prices.empty:
             raise ValueError(
                 "No trades in the last 15 minutes to calculate the GBCE All Share Index."
             )
 
-        product_of_prices = prod(prices)
-        return product_of_prices ** (1 / len(prices))
+        product_of_prices = recent_prices.prod()
+        return product_of_prices ** (1 / len(recent_prices))
