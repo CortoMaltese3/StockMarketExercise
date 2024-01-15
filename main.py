@@ -16,22 +16,33 @@ from stock_market import StockMarket
 def main():
     market = StockMarket()
 
-    # Dividend yield
-    print(market.calculate_dividend_yield("TEA", 100))
-    print(market.calculate_dividend_yield("ALE", 100))
-    print(market.calculate_dividend_yield("GIN", 100))
+    try:
+        # Calculate dividend yields examples
+        print(market.calculate_dividend_yield("TEA", 100))
+        print(market.calculate_dividend_yield("ALE", 100))
+        print(market.calculate_dividend_yield("GIN", 100))
 
-    # P/E ratio
-    print(market.calculate_pe_ratio("ALE", 100))
-    print(market.calculate_pe_ratio("GIN", 100))
+        # Calculate P/E ratios examples
+        print(market.calculate_pe_ratio("ALE", 100))
+        print(market.calculate_pe_ratio("GIN", 100))
 
-    market.record_trade("ALE", 200, 0, 500)
-    market.record_trade("ALE", 100, 1, 300)
-    print(market.trades)
+        # Record trades examples
+        market.record_trade("ALE", 200, 0, 500)
+        market.record_trade("ALE", 100, 1, 300)
+        print(market.trades)
 
-    print(market.calculate_volume_weighted_stock_price("ALE"))
+        # Calculate volume weighted stock price example
+        print(market.calculate_volume_weighted_stock_price("ALE"))
 
-    print(market.calculate_gbce_all_share_index())
+        # Calculate the GBCE All Share Index example
+        print(market.calculate_gbce_all_share_index())
+
+    except ValueError as error:
+        print(f"A value error has occured. More info: {error}")
+    except TypeError as error:
+        print(f"A type error has occured. More info:{error}")
+    except Exception as error:
+        print(f"An error has occured. More info: {error}")
 
 
 if __name__ == "__main__":
