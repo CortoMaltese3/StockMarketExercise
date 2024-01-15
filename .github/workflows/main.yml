@@ -1,4 +1,4 @@
-name: StockMarketExercise
+name: StockMarketExercise build & test
 
 on:
   push:
@@ -7,21 +7,23 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+    - uses: actions/checkout@v4
 
-    - name: Set up Conda
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v3
       with:
-        activate-environment: jpm
-        environment-file: environment.yml
-        python-version: 3.8
-        auto-activate-base: false
+        auto-update-conda: true
+
+    - name: Create conda environment
+      run: conda env create --file environment.yml
+
+    - name: Activate conda environment
+      run: conda activate jpm
 
     - name: Run tests
-      run: |
-        conda activate jpm
-        pytest tests
+      run: pytest tests
