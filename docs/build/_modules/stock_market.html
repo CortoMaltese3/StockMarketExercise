@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>stock_market &#8212; jpm  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b3523f8e" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=039e1c02" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for stock_market</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">from</span> <span class="nn">adapter</span> <span class="kn">import</span> <span class="n">DataAdapter</span>
+
+
+<div class="viewcode-block" id="StockMarket"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket">[docs]</a><span class="k">class</span> <span class="nc">StockMarket</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Initialize the data adapter to fetch stock data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_adapter</span> <span class="o">=</span> <span class="n">DataAdapter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_adapter</span><span class="o">.</span><span class="n">get_stocks</span><span class="p">()</span>
+        <span class="c1"># Convert the stock data into a Pandas DataFrame for easier manipulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_stocks_to_dataframe</span><span class="p">()</span>
+
+        <span class="c1"># Trade log</span>
+        <span class="c1"># Initialize the trades DataFrame with predefined columns to avoid issues with empty DataFrames</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trades</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;stock_symbol&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;transaction_created&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;share_quantity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;buy_sell_indicator&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;traded_price&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_stocks_to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert the stocks dictionary to a DataFrame.</span>
+
+<span class="sd">        :return: The stocks DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stocks</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Requirement 1a.i</span>
+<div class="viewcode-block" id="StockMarket.calculate_dividend_yield"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket.calculate_dividend_yield">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_dividend_yield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stock_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">price</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the dividend yield for a given stock and price.</span>
+
+<span class="sd">        :param stock_symbol: Symbol of the stock (e.g., &#39;TEA&#39;).</span>
+<span class="sd">        :param price: The market price of the stock.</span>
+<span class="sd">        :return: The dividend yield as a float.</span>
+<span class="sd">        :raises ValueError: If the stock symbol is not found or the price is non-positive.</span>
+<span class="sd">        :raises TypeError: If the price is not a number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Invalid input error handling</span>
+        <span class="k">if</span> <span class="n">stock_symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stock symbol &#39;</span><span class="si">{</span><span class="n">stock_symbol</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Price must be a number.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">price</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Price must be greater than zero.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve single stock information from the dataset</span>
+        <span class="n">stock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">stock_symbol</span><span class="p">]</span>
+
+        <span class="c1"># Calculate dividend yield based on stock type</span>
+        <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Common&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Last Dividend&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Last Dividend&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">price</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Preferred stock</span>
+            <span class="n">fixed_dividend</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Fixed Dividend&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;%&quot;</span><span class="p">))</span> <span class="o">/</span> <span class="mi">100</span>
+            <span class="k">return</span> <span class="n">fixed_dividend</span> <span class="o">*</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Par Value&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">price</span></div>
+
+    <span class="c1"># Requirement 1a.ii</span>
+<div class="viewcode-block" id="StockMarket.calculate_pe_ratio"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket.calculate_pe_ratio">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pe_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stock_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">price</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the Price/Earnings (P/E) ratio for a given stock and price.</span>
+
+<span class="sd">        :param stock_symbol: Symbol of the stock (e.g., &#39;ALE&#39;).</span>
+<span class="sd">        :param price: The market price of the stock.</span>
+<span class="sd">        :return: The P/E ratio as a float.</span>
+<span class="sd">        :raises ValueError: If the stock symbol is not found, the price is non-positive,</span>
+<span class="sd">                            or the last dividend is zero.</span>
+<span class="sd">        :raises TypeError: If the price is not a number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Invalid input error handling</span>
+        <span class="k">if</span> <span class="n">stock_symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stock symbol &#39;</span><span class="si">{</span><span class="n">stock_symbol</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Price must be a number.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">price</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Price must be greater than zero.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve single stock information from the dataset</span>
+        <span class="n">stock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">stock_symbol</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Last Dividend&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;P/E ratio cannot be calculated. Error division by zero.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">price</span> <span class="o">/</span> <span class="n">stock</span><span class="p">[</span><span class="s2">&quot;Last Dividend&quot;</span><span class="p">]</span></div>
+
+    <span class="c1"># Requirement 1a.iii</span>
+<div class="viewcode-block" id="StockMarket.record_trade"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket.record_trade">[docs]</a>    <span class="k">def</span> <span class="nf">record_trade</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">stock_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">share_quantity</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">buy_sell_indicator</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">traded_price</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Record a trade with details such as stock symbol, quantity of shares, buy/sell indicator, and traded price.</span>
+
+<span class="sd">        :param stock_symbol: Symbol of the stock (e.g., &#39;GIN&#39;).</span>
+<span class="sd">        :param share_quantity: The number of shares traded.</span>
+<span class="sd">        :param buy_sell_indicator: Indicator of the trade type (0 for &#39;buy&#39;, 1 for &#39;sell&#39;).</span>
+<span class="sd">        :param traded_price: The price at which the stock was traded.</span>
+<span class="sd">        :raises ValueError: If the stock symbol is not found, share quantity is non-positive,</span>
+<span class="sd">                            buy/sell indicator is not 0 or 1, or traded price is non-positive.</span>
+<span class="sd">        :raises TypeError: If the share quantity or traded price is not a number.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Invalid input error handling</span>
+        <span class="k">if</span> <span class="n">stock_symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stock symbol &#39;</span><span class="si">{</span><span class="n">stock_symbol</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">share_quantity</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">share_quantity</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Share quantity must be a positive integer.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">buy_sell_indicator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Buy/sell indicator must be either 0 for &#39;buy&#39; or 1 for &#39;sell&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traded_price</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="ow">or</span> <span class="n">traded_price</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Traded price must be a positive number.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Record the trade</span>
+        <span class="n">new_trade</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trades</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s2">&quot;stock_symbol&quot;</span><span class="p">:</span> <span class="n">stock_symbol</span><span class="p">,</span>
+                    <span class="s2">&quot;transaction_created&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">(),</span>
+                    <span class="s2">&quot;share_quantity&quot;</span><span class="p">:</span> <span class="n">share_quantity</span><span class="p">,</span>
+                    <span class="s2">&quot;buy_sell_indicator&quot;</span><span class="p">:</span> <span class="n">buy_sell_indicator</span><span class="p">,</span>
+                    <span class="s2">&quot;traded_price&quot;</span><span class="p">:</span> <span class="n">traded_price</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Concatenate the new trade to the existing trades DataFrame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trades</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">trades</span><span class="p">,</span> <span class="n">new_trade</span><span class="p">],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+    <span class="c1"># Requirement 1a.iv</span>
+<div class="viewcode-block" id="StockMarket.calculate_volume_weighted_stock_price"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket.calculate_volume_weighted_stock_price">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_volume_weighted_stock_price</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stock_symbol</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the Volume Weighted Stock Price (VWSP) based on trades in the past 15 minutes for a given stock.</span>
+
+<span class="sd">        :param stock_symbol: Symbol of the stock (e.g., &#39;JOE&#39;).</span>
+<span class="sd">        :return: The VWSP as a float.</span>
+<span class="sd">        :raises ValueError: If the stock symbol is not found or there are no trades in the last 15 minutes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Invalid input error handling</span>
+        <span class="k">if</span> <span class="n">stock_symbol</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stocks_df</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stock symbol &#39;</span><span class="si">{</span><span class="n">stock_symbol</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Retrieve recent trades for the given stock</span>
+        <span class="n">trades_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trades</span><span class="p">)</span>
+        <span class="n">recent_trades</span> <span class="o">=</span> <span class="n">trades_df</span><span class="p">[</span>
+            <span class="p">(</span><span class="n">trades_df</span><span class="p">[</span><span class="s2">&quot;stock_symbol&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">stock_symbol</span><span class="p">)</span>
+            <span class="o">&amp;</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> <span class="o">-</span> <span class="n">trades_df</span><span class="p">[</span><span class="s2">&quot;transaction_created&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">15</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Raise error in case of no trades in the last 15 minutes</span>
+        <span class="k">if</span> <span class="n">recent_trades</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No trades in the last 15 minutes for the given stock symbol.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the VWSP</span>
+        <span class="n">volume_weighted_stock_price</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">recent_trades</span><span class="p">[</span><span class="s2">&quot;traded_price&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">recent_trades</span><span class="p">[</span><span class="s2">&quot;share_quantity&quot;</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">recent_trades</span><span class="p">[</span><span class="s2">&quot;share_quantity&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">volume_weighted_stock_price</span></div>
+
+    <span class="c1"># Requirement 1b</span>
+<div class="viewcode-block" id="StockMarket.calculate_gbce_all_share_index"><a class="viewcode-back" href="../stock_market.html#stock_market.StockMarket.calculate_gbce_all_share_index">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_gbce_all_share_index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the GBCE All Share Index using the geometric mean of traded prices for all stocks in the last 15 minutes.</span>
+
+<span class="sd">        :return: The GBCE All Share Index as a float.</span>
+<span class="sd">        :raises ValueError: If there are no trades in the last 15 minutes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Retrieve recent trades</span>
+        <span class="n">trades_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trades</span><span class="p">)</span>
+        <span class="n">recent_prices</span> <span class="o">=</span> <span class="n">trades_df</span><span class="p">[</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span> <span class="o">-</span> <span class="n">trades_df</span><span class="p">[</span><span class="s2">&quot;transaction_created&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="p">][</span><span class="s2">&quot;traded_price&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Raise error in case of no trades in the last 15 minutes</span>
+        <span class="k">if</span> <span class="n">recent_prices</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;No trades in the last 15 minutes to calculate the GBCE All Share Index.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Calculate the GBCE All Share Index</span>
+        <span class="n">product_of_prices</span> <span class="o">=</span> <span class="n">recent_prices</span><span class="o">.</span><span class="n">prod</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">product_of_prices</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">recent_prices</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">jpm</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stock_market.html">Stock Market Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../adapter.html">Adapters Module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2024, gkalomalos.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
